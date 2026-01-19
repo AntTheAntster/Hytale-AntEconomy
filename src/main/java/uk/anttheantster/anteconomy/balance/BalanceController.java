@@ -1,6 +1,5 @@
 package uk.anttheantster.anteconomy.balance;
 
-import uk.anttheantster.anteconomy.AntEconomy;
 import uk.anttheantster.anteconomy.utils.EconomyData;
 import uk.anttheantster.anteconomy.utils.EconomyFileStore;
 
