@@ -1,16 +1,15 @@
-# Hytale Plugin Template
+# Hytale Economy Plugin
 
-A template for Hytale java plugins. Created by [Up](https://github.com/UpcraftLP), and slightly modified by Kaupenjoe. 
+A simple economy plugin
 
-### Configuring the Template
-If you for example installed the game in a non-standard location, you will need to tell the project about that.
-The recommended way is to create a file at `%USERPROFILE%/.gradle/gradle.properties` to set these properties globally.
+## Commands and Permissions
 
-```properties
-# Set a custom game install location
-hytale.install_dir=path/to/Hytale
+/balance (/bal) <player> - View your balance or another players balance | "antseconomy.balance<.others>"
+/pay <player> - Pay another player | "antseconomy.pay"
+/economy (/eco) - Admin commands | "antseconomy.admin"
+/eco give <Player> <Amount> - Add an amount to a players balance | "antseconomy.admin.give"
+/eco take <Player> <Amount> - Take an amount from a players balance | "antseconomy.admin.take"
+/eco reset <Player> - Reset the specified players balance to config.json default | "antseconomy.admin.reset"
 
-# Speed up the decompilation process significantly, by only including the core hytale packages.
-# Recommended if decompiling the game takes a very long time on your PC.
-hytale.decompile_partial=true
-```
+## Notes
+MySQL Dependent (Until future update), I have shaded an SQL driver into the plugin until Hytale put one in their server client
