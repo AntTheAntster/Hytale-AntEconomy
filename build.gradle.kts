@@ -1,11 +1,12 @@
 plugins {
     `maven-publish`
     id("hytale-mod") version "0.+"
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 group = "uk.anttheantster"
-version = "0.1.0"
-val javaVersion = 25
+version = "1.0.0"
+val javaVersion = 21
 
 repositories {
     mavenCentral()
@@ -17,6 +18,7 @@ repositories {
 dependencies {
     compileOnly(libs.jetbrains.annotations)
     compileOnly(libs.jspecify)
+    compileOnly("com.mysql:mysql-connector-j:8.4.0")
 
     implementation("com.mysql:mysql-connector-j:8.4.0")
 }
@@ -73,6 +75,15 @@ tasks.withType<Jar> {
                 .getOrElse(version.toString())
     }
 }
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    configurations = listOf(project.configurations.runtimeClasspath.get())
+}
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
+
 
 publishing {
     repositories {

@@ -1,5 +1,7 @@
 package uk.anttheantster.anteconomy.utils;
 
+import com.mysql.cj.jdbc.Driver;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,6 +29,12 @@ public class MySQL {
         if (!isConnected()) {
             String url = "jdbc:mysql://" + config.getDbHost() + ":" + config.getDbPort() + "/" + config.getDbName()
                     + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+
+            try {
+                DriverManager.registerDriver(new Driver());
+            } catch (SQLException e) {
+                throw new SQLException("Failed to register MySQL JDBC driver", e);
+            }
 
             connection = DriverManager.getConnection(
                     url,

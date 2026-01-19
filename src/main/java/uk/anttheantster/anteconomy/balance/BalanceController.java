@@ -89,4 +89,13 @@ public class BalanceController {
         return scheduler;
     }
 
+    public void loadPlayer(UUID uuid, int balance) {
+        balances.put(uuid, balance);
+        dirty.remove(uuid); // clean on load
+    }
+
+    public boolean hasPlayer(UUID uuid) {
+        return balances.containsKey(uuid);
+    }
+
 }

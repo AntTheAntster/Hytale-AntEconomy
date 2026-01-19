@@ -126,4 +126,17 @@ public class SQLGetter {
         }
         return null;
     }
+
+    public int getBalance(UUID uuid) {
+        try {
+            PreparedStatement ps = plugin.mysql.getConnection().prepareStatement("SELECT BALANCE FROM antseconomy WHERE UUID=?");
+            ps.setString(1, uuid.toString());
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("BALANCE");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

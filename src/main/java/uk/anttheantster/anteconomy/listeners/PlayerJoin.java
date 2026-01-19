@@ -12,14 +12,14 @@ public class PlayerJoin {
 
     private final AntEconomy plugin;
     private final BalanceController balanceController;
-    private final SQLGetter sql;
+    private final SQLGetter data;
     private final int defaultBalance;
 
 
-    public PlayerJoin(AntEconomy plugin, BalanceController balanceController, SQLGetter sql, int defaultBalance) {
+    public PlayerJoin(AntEconomy plugin, BalanceController balanceController, SQLGetter data, int defaultBalance) {
         this.plugin = plugin;
         this.balanceController = balanceController;
-        this.sql = sql;
+        this.data = data;
         this.defaultBalance = defaultBalance;
     }
 
@@ -31,13 +31,20 @@ public class PlayerJoin {
         String name = ref.getUsername();
 
         if (plugin.mysql.isConnected()){
-            if (!sql.exists(uuid)){
-                sql.createPlayer(uuid, name, defaultBalance);
-                sql.setBalance(defaultBalance, uuid);
-                sql.setPlayerName(uuid, name);
+            if (!data.exists(uuid)){
+                data.createPlayer(uuid, name, defaultBalance);
+                data.setBalance(defaultBalance, uuid);
+                data.setPlayerName(uuid, name);
             }
         }
 
+        balanceController.getExecutor().execute(() -> {
+            int balance = data.getBalance(uuid);
+
+            if (!balanceController.hasPlayer(uuid)){
+                balanceController.loadPlayer(uuid, balance);
+            }
+        });
 
     }
 }

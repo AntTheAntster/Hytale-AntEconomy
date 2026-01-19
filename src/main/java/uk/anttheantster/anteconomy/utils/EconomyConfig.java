@@ -45,7 +45,7 @@ public class EconomyConfig {
     private int dbPort = 3306;
     private String dbName = "anteconomy";
     private String dbUser = "root";
-    private String dbPassword = "password";
+    private String dbPassword = "";
 
     public int getDefaultBalance() { return defaultBalance; }
 
