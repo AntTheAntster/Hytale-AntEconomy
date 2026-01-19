@@ -12,18 +12,16 @@ import uk.anttheantster.anteconomy.balance.PayCommand;
 import uk.anttheantster.anteconomy.balance.admin.AdminCommand;
 import uk.anttheantster.anteconomy.listeners.PlayerJoin;
 import uk.anttheantster.anteconomy.utils.EconomyConfig;
-import uk.anttheantster.anteconomy.utils.MySQL;
-import uk.anttheantster.anteconomy.utils.SQLGetter;
-
-import java.sql.SQLException;
+import uk.anttheantster.anteconomy.utils.EconomyData;
+import uk.anttheantster.anteconomy.utils.EconomyFileStore;
 
 public class AntEconomy extends JavaPlugin {
     public final HytaleLogger logger = HytaleLogger.forEnclosingClass();
 
     private final Config<EconomyConfig> config;
 
-    public MySQL mysql;
-    public SQLGetter data;
+    private final EconomyData data;
+    private final EconomyFileStore ecoFS;
 
     private BalanceController balanceController;
 
@@ -33,6 +31,9 @@ public class AntEconomy extends JavaPlugin {
         logger.atInfo().log("Starting %s", this.getName());
 
         this.config = this.withConfig(EconomyConfig.CODEC);
+
+        this.data = new EconomyData();
+        this.ecoFS = new EconomyFileStore(this.getDataDirectory());
     }
 
     @Override
@@ -41,9 +42,9 @@ public class AntEconomy extends JavaPlugin {
 
         //Create config on first run
         config.save();
-        setupSQL(cfg);
 
-        balanceController = new BalanceController(this, data);
+
+        balanceController = new BalanceController(ecoFS, cfg.getDefaultBalance());
 
         registerCommandsAndListeners();
     }
@@ -51,37 +52,21 @@ public class AntEconomy extends JavaPlugin {
     @Override
     protected void shutdown() {
         balanceController.shutdown();
-        if (mysql != null) mysql.disconnect();
+
     }
 
     public EconomyConfig getConfig() {
         return config.get();
     }
 
-    private void setupSQL(EconomyConfig cfg) {
-        this.mysql = new MySQL(cfg);
-        this.data = new SQLGetter(this);
 
-        try {
-            mysql.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        if (mysql.isConnected()){
-            logger.atInfo().log("SQL Database Connected!");
-            data.createTable();
-        } else {
-            logger.atSevere().log("SQL Database Not Connected!");
-        }
-    }
 
     private void registerCommandsAndListeners() {
-        this.getCommandRegistry().registerCommand(new BalanceCommand(balanceController, data));
-        this.getCommandRegistry().registerCommand(new AdminCommand(balanceController, data));
-        this.getCommandRegistry().registerCommand(new PayCommand(balanceController, data));
+        this.getCommandRegistry().registerCommand(new BalanceCommand(balanceController));
+        this.getCommandRegistry().registerCommand(new AdminCommand(balanceController, getConfig()));
+        this.getCommandRegistry().registerCommand(new PayCommand(balanceController));
 
-        PlayerJoin pJoin = new PlayerJoin(this, balanceController, data, getConfig().getDefaultBalance());
+        PlayerJoin pJoin = new PlayerJoin(balanceController);
         this.getEventRegistry().registerGlobal(PlayerConnectEvent.class, pJoin::onJoin);
     }
 }

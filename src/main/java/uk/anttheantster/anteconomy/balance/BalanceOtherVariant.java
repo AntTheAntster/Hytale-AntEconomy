@@ -11,21 +11,18 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
-import uk.anttheantster.anteconomy.utils.SQLGetter;
 
 import java.util.UUID;
 
 public class BalanceOtherVariant extends CommandBase {
     private BalanceController balanceController;
-    private SQLGetter data;
 
     private RequiredArg<UUID> target;
 
-    public BalanceOtherVariant(BalanceController balanceController, SQLGetter data) {
+    public BalanceOtherVariant(BalanceController balanceController) {
         super("View another player's balance");
         requirePermission("antseconomy.balance.others");
         this.balanceController = balanceController;
-        this.data = data;
 
         this.target = this.withRequiredArg("player", "Player name", ArgTypes.PLAYER_UUID);
     }
@@ -45,7 +42,7 @@ public class BalanceOtherVariant extends CommandBase {
         EntityStore entityStore = senderRef.getStore().getExternalData();
         World world = entityStore.getWorld();
 
-        String targetName = data.getPlayerName(context.get(target));
+        String targetName = balanceController.getName(context.get(target));
 
         world.execute(() -> {
             if (!senderRef.isValid()) return;

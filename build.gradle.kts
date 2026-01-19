@@ -6,7 +6,7 @@ plugins {
 
 group = "uk.anttheantster"
 version = "1.0.0"
-val javaVersion = 21
+val javaVersion = 25
 
 repositories {
     mavenCentral()
@@ -18,9 +18,6 @@ repositories {
 dependencies {
     compileOnly(libs.jetbrains.annotations)
     compileOnly(libs.jspecify)
-    compileOnly("com.mysql:mysql-connector-j:8.4.0")
-
-    implementation("com.mysql:mysql-connector-j:8.4.0")
 }
 
 hytale {

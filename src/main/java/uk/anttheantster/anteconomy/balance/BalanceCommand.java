@@ -2,19 +2,14 @@ package uk.anttheantster.anteconomy.balance;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
-import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
-import uk.anttheantster.anteconomy.utils.FindOnlinePlayerHelper;
-import uk.anttheantster.anteconomy.utils.SQLGetter;
-
 import java.util.UUID;
 
 public class BalanceCommand extends CommandBase {
@@ -22,14 +17,14 @@ public class BalanceCommand extends CommandBase {
 
     private OptionalArg<String> target;
 
-    public BalanceCommand(BalanceController balanceController, SQLGetter data) {
+    public BalanceCommand(BalanceController balanceController) {
         super("balance", "Get player balance");
         addAliases("bal");
         requirePermission("antseconomy.balance");
 
         this.balanceController = balanceController;
 
-        this.addUsageVariant(new BalanceOtherVariant(balanceController, data));
+        this.addUsageVariant(new BalanceOtherVariant(balanceController));
 
     }
 

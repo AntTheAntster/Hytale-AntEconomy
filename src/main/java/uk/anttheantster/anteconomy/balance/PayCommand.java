@@ -7,31 +7,26 @@ import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredAr
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
-import uk.anttheantster.anteconomy.utils.SQLGetter;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 
 import static uk.anttheantster.anteconomy.utils.FindOnlinePlayerHelper.findOnlinePlayerRef;
 
 public class PayCommand extends CommandBase {
     private BalanceController balanceController;
-    private SQLGetter data;
 
     private RequiredArg<UUID> target;
     private RequiredArg<Integer> amount;
 
 
-    public PayCommand(BalanceController balanceController, SQLGetter data) {
+    public PayCommand(BalanceController balanceController) {
         super("pay", "Pay a specified player 'x' amount");
         this.requirePermission("anteconomy.pay");
 
         this.balanceController = balanceController;
-        this.data = data;
 
         this.target = this.withRequiredArg("target", "Target name or UUID", ArgTypes.PLAYER_UUID);
         this.amount = this.withRequiredArg("amount", "Amount to pay player", ArgTypes.INTEGER);

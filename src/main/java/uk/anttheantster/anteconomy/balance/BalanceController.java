@@ -1,101 +1,116 @@
 package uk.anttheantster.anteconomy.balance;
 
 import uk.anttheantster.anteconomy.AntEconomy;
-import uk.anttheantster.anteconomy.utils.SQLGetter;
+import uk.anttheantster.anteconomy.utils.EconomyData;
+import uk.anttheantster.anteconomy.utils.EconomyFileStore;
 
 import java.util.*;
 import java.util.concurrent.*;
 
-public class BalanceController {
-    private AntEconomy plugin;
-    private SQLGetter data;
-    public BalanceController(AntEconomy plugin, SQLGetter data){
-        this.plugin = plugin;
-        this.data = data;
+public final class BalanceController {
 
-        start();
-    }
+    private final EconomyFileStore store;
+    private final long defaultBalance;
+    private EconomyData data;
 
-    private final ConcurrentHashMap<UUID, Integer> balances = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Long> balances = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, UUID> nameIndex = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, String> uuidToName = new ConcurrentHashMap<>();
     private final Set<UUID> dirty = ConcurrentHashMap.newKeySet();
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "AntEconomy DB-Updater");
+    private final ScheduledExecutorService io = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "AntEconomy-FileStore");
         t.setDaemon(true);
         return t;
     });
 
-    public int getBalance(UUID uuid) {
-        return balances.getOrDefault(uuid, 0);
+    public BalanceController(EconomyFileStore store, long defaultBalance) {
+        this.store = store;
+        this.defaultBalance = defaultBalance;
+
+        this.data = new EconomyData();
     }
 
-    public void setBalance(UUID uuid, int amount) {
+    public void start() {
+        io.execute(this::loadAll);
+
+        io.scheduleAtFixedRate(() -> {
+            try { flushAll(); } catch (Exception e) { e.printStackTrace(); }
+        }, 5, 5, TimeUnit.MINUTES);
+    }
+
+    private void loadAll() {
+        EconomyData data = store.load();
+
+        balances.clear();
+        nameIndex.clear();
+        dirty.clear();
+
+        data.players.forEach((uuidStr, entry) -> {
+            UUID uuid = UUID.fromString(uuidStr);
+            balances.put(uuid, entry.balance);
+            if (entry.name != null) nameIndex.put(entry.name.toLowerCase(Locale.ROOT), uuid);
+            uuidToName.put(uuid, entry.name);
+        });
+
+        // Also load names map (optional, but nice)
+        data.names.forEach((lower, uuidStr) -> nameIndex.put(lower, UUID.fromString(uuidStr)));
+    }
+
+    public long getBalance(UUID uuid) {
+        return balances.getOrDefault(uuid, defaultBalance);
+    }
+
+    public void setBalance(UUID uuid, long amount) {
         balances.put(uuid, amount);
         dirty.add(uuid);
     }
 
-    public void resetBalance(UUID uuid) {
-        setBalance(uuid, plugin.getConfig().getDefaultBalance()); //Later the 1000 will be changed to a config reference of whatever the user wants as their default-balance
+    public void onPlayerJoin(UUID uuid, String name) {
+        uuidToName.put(uuid, name);
+
+        String key = name.toLowerCase(Locale.ROOT);
+        nameIndex.put(key, uuid);
+
+        // Initialize balance if missing
+        balances.putIfAbsent(uuid, defaultBalance);
+        dirty.add(uuid); // ensure it gets saved with the new name mapping
     }
 
-    // The actual lifecycle of the SQL Daemon
-    public void start() {
-        //1. Load balances on background thread at start
-        scheduler.execute(() -> {
-            try {
-
-                Map<UUID, Integer> dbBalances = data.loadAllBalances();
-
-                balances.clear();
-                balances.putAll(dbBalances);
-
-                dirty.clear();
-                plugin.logger.atInfo().log("Loaded " + dbBalances.size() + " balances from DB to Memory!");
-            } catch (Exception e) {
-                e.printStackTrace();
-                //Decide to disable plugin or run with no caching later on or make it configurable
-            }
-        });
-
-        //2. Update the "dirty" uuid's every 'x' mins (dirty = changed) -- Reason: No point updating the SQL with entries of UUID's data that hasn't changed
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                updateBalances();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 5, 5, TimeUnit.MINUTES);
+    public UUID resolveName(String name) {
+        return nameIndex.get(name.toLowerCase(Locale.ROOT));
     }
 
     public void shutdown() {
-        //Push during shutdown/reboot
-        updateBalances();
-        scheduler.shutdownNow();
+        io.execute(this::flushAll);
+        io.shutdown();
     }
 
-    private void updateBalances() {
-        //Copy and clear so that the threads keep working and don't lose sync during database pushes.
-        List<UUID> toPush = new ArrayList<>(dirty);
-        dirty.removeAll(toPush);
+    private void flushAll() {
 
-        for (int i = 0; i < toPush.size(); i++) {
-            UUID uuid = toPush.get(i);
-            Integer bal = balances.get(uuid);
-            if (bal != null) data.setBalance(bal, uuid);
+        for (var e : balances.entrySet()) {
+            UUID uuid = e.getKey();
+            long bal = e.getValue();
+
+            String name = null;
+            // best-effort reverse lookup (optional); or store name separately on join
+            data.players.put(uuid.toString(), new EconomyData.PlayerEntry(name, bal));
         }
+
+        // Persist name index too
+        for (var e : nameIndex.entrySet()) {
+            data.names.put(e.getKey(), e.getValue().toString());
+        }
+
+        store.saveAtomic(data);
+        dirty.clear();
     }
 
     public Executor getExecutor() {
-        return scheduler;
+        return io;
     }
 
-    public void loadPlayer(UUID uuid, int balance) {
-        balances.put(uuid, balance);
-        dirty.remove(uuid); // clean on load
+    public String getName(UUID uuid) {
+        return uuidToName.getOrDefault(uuid, uuid.toString());
     }
-
-    public boolean hasPlayer(UUID uuid) {
-        return balances.containsKey(uuid);
-    }
-
 }

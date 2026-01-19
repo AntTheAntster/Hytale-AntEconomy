@@ -10,20 +10,20 @@ import uk.anttheantster.anteconomy.balance.BalanceController;
 
 import java.util.UUID;
 
-public class EconomyGiveCommand extends CommandBase {
+public class EconomySetCommand extends CommandBase {
     private final BalanceController balances;
 
     private final RequiredArg<UUID> target;
     private final RequiredArg<Integer> amount;
 
-    public EconomyGiveCommand(BalanceController balances) {
-        super("give", "Give specified player 'x' amount");
-        this.requirePermission("antseconomy.admin.give");
+    public EconomySetCommand(BalanceController balances) {
+        super("set", "Set a specified players balance to 'x' amount");
+        this.requirePermission("antseconomy.admin.set");
 
         this.balances = balances;
 
         this.target = this.withRequiredArg("target", "Target name or UUID", ArgTypes.PLAYER_UUID);
-        this.amount = this.withRequiredArg("Amount", "Amount to give player", ArgTypes.INTEGER);
+        this.amount = this.withRequiredArg("Amount", "Amount to set the player to", ArgTypes.INTEGER);
     }
 
     @Override
@@ -32,15 +32,11 @@ public class EconomyGiveCommand extends CommandBase {
         UUID tUUID = context.get(target);
         int amt = context.get(amount);
 
-        if (amt <= 0) {
-            context.sendMessage(Message.raw("Amount must be more than 0."));
-        }
-
-        int newBal = Math.toIntExact(balances.getBalance(tUUID) + amt);
+        int newBal = Math.toIntExact(amt);
         balances.setBalance(tUUID, newBal);
 
         String tName = balances.getName(tUUID);
 
-        context.sendMessage(Message.raw("Gave " + amt + " to " + tName));
+        context.sendMessage(Message.raw("Set " + tName + "'s Balance to " + amt));
     }
 }
