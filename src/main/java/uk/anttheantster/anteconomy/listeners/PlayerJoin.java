@@ -2,7 +2,6 @@ package uk.anttheantster.anteconomy.listeners;
 
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import uk.anttheantster.anteconomy.AntEconomy;
 import uk.anttheantster.anteconomy.balance.BalanceController;
 
 import java.util.UUID;

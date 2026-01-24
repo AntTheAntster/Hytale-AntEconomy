@@ -40,7 +40,7 @@ public class AntEconomy extends JavaPlugin {
     protected void setup() {
         EconomyConfig cfg = config.get();
 
-        //Create config on first run
+        //Creates a config if it doesn't exist
         config.save();
 
 
