@@ -34,6 +34,6 @@ public class BalanceCommand extends AbstractPlayerCommand {
     protected void execute(@NonNull CommandContext context, @NonNull Store<EntityStore> store, @NonNull Ref<EntityStore> ref, @NonNull PlayerRef playerRef, @NonNull World world) {
 
         UUID pUuid = playerRef.getUuid();
-        playerRef.sendMessage(Message.raw("Balance: " + balanceController.getBalance(pUuid)));
+        playerRef.sendMessage(Message.raw("Balance: " + balanceController.getCurrencyPrefix() + balanceController.getBalance(pUuid)));
     }
 }

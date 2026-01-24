@@ -41,6 +41,6 @@ public class EconomyTakeCommand extends CommandBase {
 
         String tName = balances.getName(tUUID);
 
-        context.sendMessage(Message.raw("Taken " + amt + " to " + tName));
+        context.sendMessage(Message.raw("Taken " + balances.getCurrencyPrefix() + amt + " to " + tName));
     }
 }

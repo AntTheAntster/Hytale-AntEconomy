@@ -37,6 +37,6 @@ public class EconomySetCommand extends CommandBase {
 
         String tName = balances.getName(tUUID);
 
-        context.sendMessage(Message.raw("Set " + tName + "'s Balance to " + amt));
+        context.sendMessage(Message.raw("Set " + tName + "'s Balance to " + balances.getCurrencyPrefix() + amt));
     }
 }

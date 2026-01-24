@@ -54,7 +54,7 @@ public class BalanceOtherVariant extends CommandBase {
 
             UUID tUUID = context.get(target);
 
-            playerRef.sendMessage(Message.raw(targetName + "'s Balance: " + balanceController.getBalance(tUUID)));
+            playerRef.sendMessage(Message.raw(targetName + "'s Balance: " + balanceController.getCurrencyPrefix() + balanceController.getBalance(tUUID)));
         });
     }
 }
