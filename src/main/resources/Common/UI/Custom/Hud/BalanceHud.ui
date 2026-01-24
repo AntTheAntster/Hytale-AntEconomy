@@ -1,0 +1,11 @@
+$C = "../Common.ui";
+Group {
+  LayoutMode: Top;
+  Background: #2a2a2a;
+  Anchor: (Right: 10, Top: 10, Width: 200, Height: 25);
+  Label #Balance {
+    Anchor: (Left: 6, Top: 2, Right: 6, Bottom: 2);
+    Text: "Balance: ";
+    Style: (TextColor: #ffffff);
+  }
+}

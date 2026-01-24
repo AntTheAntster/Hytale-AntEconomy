@@ -2,6 +2,7 @@ package uk.anttheantster.anteconomy;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.util.Config;
@@ -11,11 +12,15 @@ import uk.anttheantster.anteconomy.balance.BalanceController;
 import uk.anttheantster.anteconomy.balance.PayCommand;
 import uk.anttheantster.anteconomy.balance.admin.AdminCommand;
 import uk.anttheantster.anteconomy.listeners.PlayerJoin;
+import uk.anttheantster.anteconomy.listeners.PlayerLeave;
+import uk.anttheantster.anteconomy.ui.BalanceHud;
+import uk.anttheantster.anteconomy.ui.BalanceHudService;
 import uk.anttheantster.anteconomy.utils.EconomyConfig;
 import uk.anttheantster.anteconomy.utils.EconomyData;
 import uk.anttheantster.anteconomy.utils.EconomyFileStore;
 
 public class AntEconomy extends JavaPlugin {
+    public static BalanceHudService balanceHudService;
     public final HytaleLogger logger = HytaleLogger.forEnclosingClass();
 
     private final Config<EconomyConfig> config;
@@ -43,8 +48,8 @@ public class AntEconomy extends JavaPlugin {
         //Creates a config if it doesn't exist
         config.save();
 
-
-        balanceController = new BalanceController(ecoFS, cfg.getDefaultBalance());
+        balanceHudService = new BalanceHudService();
+        balanceController = new BalanceController(ecoFS, cfg.getDefaultBalance(), getConfig(), balanceHudService);
 
         registerCommandsAndListeners();
     }
@@ -52,7 +57,6 @@ public class AntEconomy extends JavaPlugin {
     @Override
     protected void shutdown() {
         balanceController.shutdown();
-
     }
 
     public EconomyConfig getConfig() {
@@ -62,11 +66,13 @@ public class AntEconomy extends JavaPlugin {
 
 
     private void registerCommandsAndListeners() {
-        this.getCommandRegistry().registerCommand(new BalanceCommand(balanceController));
+        this.getCommandRegistry().registerCommand(new BalanceCommand(balanceController, balanceHudService));
         this.getCommandRegistry().registerCommand(new AdminCommand(balanceController, getConfig()));
         this.getCommandRegistry().registerCommand(new PayCommand(balanceController));
 
         PlayerJoin pJoin = new PlayerJoin(balanceController);
+        PlayerLeave pLeave = new PlayerLeave(balanceHudService);
         this.getEventRegistry().registerGlobal(PlayerConnectEvent.class, pJoin::onJoin);
+        this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, pLeave::onLeave);
     }
 }

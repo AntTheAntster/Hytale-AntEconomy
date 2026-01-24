@@ -62,6 +62,7 @@ public class PayCommand extends CommandBase {
                         "You received " + amt + " from " + sender.getUsername()
                 ));
             }
+
         });
     }
 

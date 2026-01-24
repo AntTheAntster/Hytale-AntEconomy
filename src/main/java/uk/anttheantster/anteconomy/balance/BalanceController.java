@@ -1,5 +1,7 @@
 package uk.anttheantster.anteconomy.balance;
 
+import uk.anttheantster.anteconomy.ui.BalanceHudService;
+import uk.anttheantster.anteconomy.utils.EconomyConfig;
 import uk.anttheantster.anteconomy.utils.EconomyData;
 import uk.anttheantster.anteconomy.utils.EconomyFileStore;
 
@@ -8,9 +10,12 @@ import java.util.concurrent.*;
 
 public final class BalanceController {
 
+    private final BalanceHudService hudService;
+
     private final EconomyFileStore store;
     private final long defaultBalance;
     private EconomyData data;
+    private final EconomyConfig config;
 
     private final ConcurrentHashMap<UUID, Long> balances = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, UUID> nameIndex = new ConcurrentHashMap<>();
@@ -23,11 +28,16 @@ public final class BalanceController {
         return t;
     });
 
-    public BalanceController(EconomyFileStore store, long defaultBalance) {
+    public BalanceController(EconomyFileStore store, long defaultBalance, EconomyConfig config, BalanceHudService hudService) {
         this.store = store;
         this.defaultBalance = defaultBalance;
 
         this.data = new EconomyData();
+        this.config = config;
+
+        this.hudService = hudService;
+
+        start();
     }
 
     public void start() {
@@ -52,7 +62,6 @@ public final class BalanceController {
             uuidToName.put(uuid, entry.name);
         });
 
-        // Also load names map (optional, but nice)
         data.names.forEach((lower, uuidStr) -> nameIndex.put(lower, UUID.fromString(uuidStr)));
     }
 
@@ -63,6 +72,7 @@ public final class BalanceController {
     public void setBalance(UUID uuid, long amount) {
         balances.put(uuid, amount);
         dirty.add(uuid);
+        hudService.onBalanceChanged(uuid);
     }
 
     public void onPlayerJoin(UUID uuid, String name) {
@@ -71,9 +81,8 @@ public final class BalanceController {
         String key = name.toLowerCase(Locale.ROOT);
         nameIndex.put(key, uuid);
 
-        // Initialize balance if missing
         balances.putIfAbsent(uuid, defaultBalance);
-        dirty.add(uuid); // ensure it gets saved with the new name mapping
+        dirty.add(uuid);
     }
 
     public UUID resolveName(String name) {
@@ -92,11 +101,9 @@ public final class BalanceController {
             long bal = e.getValue();
 
             String name = null;
-            // best-effort reverse lookup (optional); or store name separately on join
             data.players.put(uuid.toString(), new EconomyData.PlayerEntry(name, bal));
         }
 
-        // Persist name index too
         for (var e : nameIndex.entrySet()) {
             data.names.put(e.getKey(), e.getValue().toString());
         }
@@ -111,5 +118,9 @@ public final class BalanceController {
 
     public String getName(UUID uuid) {
         return uuidToName.getOrDefault(uuid, uuid.toString());
+    }
+
+    public String getCurrencyPrefix() {
+        return config.getCurrencyPrefix();
     }
 }
